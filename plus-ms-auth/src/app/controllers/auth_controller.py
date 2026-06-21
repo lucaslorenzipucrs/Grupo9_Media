@@ -76,6 +76,12 @@ def refresh_token(data: RefreshRequestDTO):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token inválido."
         )
+    
+    if payload.get("token_type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token não é um refresh token."
+        )
 
     # Novo access token
     new_access_token = TokenService.generate_tokens(

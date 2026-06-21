@@ -10,7 +10,14 @@ class TokenService:
     def generate_tokens(user: UserModel) -> dict:
     
         # Payload do JWT
-        payload = {"sub": user.email, "user_id": user.id, "role": user.role.name if user.role else None}
+        role = user.role
+
+        if isinstance(role, str):
+            role_name = role
+        else:
+            role_name = role.name if role else None
+
+        payload = {"sub": user.email, "user_id": user.id, "role": role_name}
 
         access_token = create_access_token(data=payload) # JWT de acesso
 

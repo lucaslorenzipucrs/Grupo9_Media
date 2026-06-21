@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
-ARG VITE_MS_AUTH_URL=http://localhost:3001
+ARG VITE_MS_AUTH_URL=http://localhost:3005
 ENV VITE_MS_AUTH_URL=$VITE_MS_AUTH_URL
 RUN npm run build
 
