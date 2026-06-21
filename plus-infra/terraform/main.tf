@@ -37,6 +37,20 @@ resource "aws_s3_bucket_versioning" "media" {
   }
 }
 
+resource "aws_db_instance" "media" {
+  identifier          = "plus-media-db"
+  engine              = "postgres"
+  engine_version      = "15.3"
+  instance_class      = "db.t3.micro"
+  username            = var.db_user
+  password            = var.db_password
+  db_name             = "plus_media"
+  allocated_storage   = 20
+  multi_az            = false
+  publicly_accessible = false
+  skip_final_snapshot = true
+}
+
 # ─── RDS ──────────────────────────────────────────────────────────────────────
 
 resource "aws_db_instance" "auth" {
@@ -46,7 +60,7 @@ resource "aws_db_instance" "auth" {
   instance_class      = "db.t3.micro"
   username            = var.db_user
   password            = var.db_password
-  db_name             = var.db_name
+  db_name             = "plus_auth"
   allocated_storage   = 20
   multi_az            = false
   publicly_accessible = false
