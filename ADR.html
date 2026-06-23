@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ADR – MS3 Media Service</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333333; padding: 40px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #1a365d; border-bottom: 2px solid #1a365d; padding-bottom: 10px; font-size: 26px; }
+        h2 { color: #2c5282; margin-top: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; font-size: 20px; }
+        h3 { color: #4a5568; font-size: 16px; }
+        .meta-box { background-color: #f7fafc; border-left: 4px solid #2c5282; padding: 15px; margin-bottom: 25px; }
+        .meta-box p { margin: 5px 0; font-size: 14px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 5px; }
+        code { background-color: #edf2f7; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-size: 14px; }
+        pre { background-color: #1a202c; color: #fff; padding: 15px; border-radius: 6px; overflow-x: auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
+        th, td { border: 1px solid #cbd5e0; padding: 12px; text-align: left; }
+        th { background-color: #f7fafc; color: #2d3748; }
+        blockquote { margin: 20px 0; padding: 10px 20px; background-color: #fffaf0; border-left: 4px solid #dd6b20; color: #7b341e; }
+        .page-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+
+    <h1>Architectural Decision Record (ADR) – MS3 Media Service</h1>
+    
+    <div class="meta-box">
+        <p><strong>Status:</strong> Aceito</p>
+        <p><strong>Versão:</strong> 2.0</p>
+        <p><strong>Data:</strong> Junho de 2026</p>
+        <p><strong>Equipe:</strong> Grupo 9</p>
+    </div>
+
+    <h2>2. Contexto</h2>
+    <p>O sistema Plus necessita de um mecanismo para gerenciamento de imagens associadas a produtos e suas variações.</p>
+    <p>Um produto pode possuir múltiplas imagens e diferentes combinações de cor, tamanho ou grade. Algumas imagens podem representar o produto principal, enquanto outras podem estar associadas a variações específicas.</p>
+    <p>Além disso, as imagens precisam ser armazenadas de forma escalável e desacoplada do domínio de produtos, permitindo crescimento independente e reutilização por diferentes consumidores da plataforma. O projeto adota uma arquitetura baseada em microsserviços, exigindo separação clara de responsabilidades e integração com os demais componentes do ecossistema.</p>
+
+    <h2>3. O Problema</h2>
+    <p>Como armazenar, organizar e disponibilizar mídias de produtos de forma:</p>
+    <ul>
+        <li>Escalável;</li>
+        <li>Desacoplada do domínio de produtos;</li>
+        <li>Integrada ao sistema de autenticação;</li>
+        <li>Compatível com ambientes locais e cloud;</li>
+        <li>Aderente aos requisitos da disciplina.</li>
+    </ul>
+
+    <h2>4. Decisão Arquitetural</h2>
+    <p>Foi adotado um microsserviço independente denominado <strong>MS3 – Media Service</strong>, responsável exclusivamente pelo gerenciamento das mídias dos produtos.</p>
+    <h3>Stack Tecnológica Adotada:</h3>
+    <ul>
+        <li><strong>Framework:</strong> FastAPI</li>
+        <li><strong>Banco de Dados:</strong> PostgreSQL</li>
+        <li><strong>Autenticação:</strong> JWT compartilhado com o MS Auth</li>
+        <li><strong>Autorização:</strong> RBAC (Role-Based Access Control - Admin/Vendedor)</li>
+        <li><strong>Storage:</strong> Armazenamento S3 compatível com AWS através do Ministack</li>
+        <li><strong>Ambiente Local:</strong> Docker Compose para orquestração</li>
+    </ul>
+
+    <h2>5. Responsabilidades do Domínio</h2>
+    <p>O Media Service é responsável por:</p>
+    <ul>
+        <li>Upload e exclusão de mídias (arquivos físicos);</li>
+        <li>Consulta de mídias e reordenação de exibição;</li>
+        <li>Associação de mídias a produtos e suas variações específicas;</li>
+        <li>Integração direta com o armazenamento de objetos S3.</li>
+    </ul>
+
+    <h2>6. Fora do Escopo</h2>
+    <p>Não são responsabilidades deste microsserviço:</p>
+    <ul>
+        <li>Cadastro de produtos, variações ou controle de estoque;</li>
+        <li>Processamento, edição de imagens ou conversão de formatos;</li>
+        <li>Suporte a arquivos de vídeo;</li>
+        <li>Autenticação de usuários e gestão centralizada de permissões.</li>
+    </ul>
+    <blockquote>
+        <strong>Nota:</strong> Estas responsabilidades pertencem estritamente a outros componentes especializados da arquitetura do sistema Plus.
+    </blockquote>
+
+    <div class="page-break"></div>
+
+    <h2>7. Modelo de Dados</h2>
+    <p>Estrutura de metadados persistida na tabela do PostgreSQL:</p>
+    <pre>{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "id_produto": "Produto1",
+  "id_variacao": "VariacaoA",
+  "caminho_arquivo": "products/Produto1/variations/VariacaoA/550e8400-e29b-41d4-a716-446655440000.jpg",
+  "ordem": 0,
+  "data_criacao": "2026-06-20T10:00:00Z",
+  "data_atualizacao": "2026-06-20T10:00:00Z"
+}</pre>
+    <p><em>O campo <code>caminho_arquivo</code> armazena a Object Key exata do arquivo dentro do bucket S3.</em></p>
+
+    <h2>8. Integração com o MS Auth</h2>
+    <p>O Media Service não realiza autenticação própria, delegando-a ao <strong>MS Auth</strong> por meio de tokens JWT.</p>
+    <h3>Fluxo de Autenticação:</h3>
+    <ol>
+        <li>O usuário realiza login no <strong>MS Auth</strong>.</li>
+        <li>O MS Auth gera e assina um token JWT.</li>
+        <li>O JWT é enviado no Header das requisições direcionadas ao <strong>MS Media</strong>.</li>
+        <li>O MS Media valida a assinatura utilizando o mesmo <code>JWT_SECRET</code> compartilhado.</li>
+        <li>As permissões são verificadas localmente via RBAC.</li>
+    </ol>
+    <h3>Perfis e Regras Suportadas:</h3>
+    <ul>
+        <li><strong>ADMIN:</strong> Permissão total (Criar, remover e reordenar mídias).</li>
+        <li><strong>VENDEDOR:</strong> Acesso restrito apenas para leitura (Consulta).</li>
+    </ul>
+
+    <h2>9. Integração com o MS Produto</h2>
+    <p>O Media Service depende da existência prévia de dados do domínio de produtos.</p>
+    <ul>
+        <li>Os identificadores <code>id_produto</code> e <code>id_variacao</code> são consumidos de forma externa.</li>
+        <li>O Media Service atua de forma passiva, não criando, alterando ou removendo os produtos em si.</li>
+    </ul>
+
+    <h2>10. Integração com Armazenamento S3</h2>
+    <p>Os arquivos binários não são armazenados no banco de dados. Foi adotado armazenamento compatível com AWS S3 utilizando o <strong>Ministack</strong>.</p>
+    <ul>
+        <li><strong>Bucket utilizado:</strong> <code>plus-media</code></li>
+        <li><strong>Estrutura de chaves (Object Keys):</strong>
+            <ul>
+                <li><em>Produto principal:</em> <code>products/{id_produto}/media/{uuid}.jpg</code></li>
+                <li><em>Variação específica:</em> <code>products/{id_produto}/variations/{id_variacao}/{uuid}.jpg</code></li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>11. Justificativa das Tecnologias</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tecnologia</th>
+                <th>Justificativa</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>FastAPI</strong></td>
+                <td>Simplicidade, documentação Swagger automática e alta performance com suporte assíncrono.</td>
+            </tr>
+            <tr>
+                <td><strong>PostgreSQL</strong></td>
+                <td>Maturidade de mercado, confiabilidade transacional e integração robusta via SQLAlchemy.</td>
+            </tr>
+            <tr>
+                <td><strong>JWT & RBAC</strong></td>
+                <td>Autenticação descentralizada, garantindo baixo acoplamento e separação clara de papéis.</td>
+            </tr>
+            <tr>
+                <td><strong>S3 / Ministack</strong></td>
+                <td>Altamente escalável em relação ao disco local, permitindo fácil migração para a AWS Cloud.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>12. Alternativas Consideradas</h2>
+    <h3>Alternativa 1: Imagens no Banco de Dados (BLOB)</h3>
+    <p><strong>Prós:</strong> Implementação inicial simples.<br>
+    <strong>Contras:</strong> Crescimento excessivo e gargalo no banco, backups lentos e perda de performance.<br>
+    <strong>Decisão:</strong> Rejeitada.</p>
+
+    <h3>Alternativa 2: Imagens em Disco Local (Volume)</h3>
+    <p><strong>Prós:</strong> Simplicidade de escrita direta em sistema de arquivos.<br>
+    <strong>Contras:</strong> Baixa escalabilidade horizontal, dificuldade de replicação e forte dependência do host.<br>
+    <strong>Decisão:</strong> Rejeitada.</p>
+
+    <h3>Alternativa 3: Object Storage (S3 API)</h3>
+    <p><strong>Prós:</strong> Isolamento completo de metadados e arquivos binários, aderente às práticas de cloud modernas.<br>
+    <strong>Contras:</strong> Exige lógica adicional de sincronização com o banco.<br>
+    <strong>Decisão:</strong> Adotada.</p>
+
+    <h2>13. Trade-offs Arquiteturais</h2>
+    <p>A adoção do S3 introduziu o desafio da consistência eventual: o banco de dados SQL e o Object Storage não participam da mesma transação atômica.</p>
+    <p>Para reduzir inconsistências sem adicionar a complexidade de transações distribuídas:</p>
+    <ul>
+        <li>Os uploads no S3 são removidos via rollback manual caso a gravação subsequente no PostgreSQL falhe.</li>
+        <li>As exclusões removem o objeto físico do storage antes da deleção definitiva do registro no banco.</li>
+    </ul>
+
+    <h2>14. Consequências da Decisão</h2>
+    <h3>Positivas:</h3>
+    <ul>
+        <li>Separação clara de responsabilidades entre serviços.</li>
+        <li>Armazenamento e escalabilidade independentes do core do sistema.</li>
+        <li>Arquitetura 100% aderente a ambientes reais AWS Cloud.</li>
+    </ul>
+    <h3>Negativas:</h3>
+    <ul>
+        <li>Dependência de disponibilidade de um storage externo (ou mock local).</li>
+        <li>Complexidade operacional ligeiramente maior (gestão de chaves, IAM e ambientes).</li>
+    </ul>
+
+    <h2>15. Validação da Solução</h2>
+    <p>A solução foi homologada por meio dos seguintes critérios de qualidade:</p>
+    <ul>
+        <li><strong>Testes Manuais:</strong> Executados de ponta a ponta via interface interativa do Swagger.</li>
+        <li><strong>Integração Real:</strong> Validação de persistência física no PostgreSQL e no container do Ministack S3.</li>
+        <li><strong>Testes Automatizados:</strong> 18 testes integrados aprovados rodando via Pytest.</li>
+        <li><strong>CI/CD:</strong> Pipeline automatizado executando a cada push no GitHub Actions.</li>
+    </ul>
+
+    <h2>16. Histórico de Revisões</h2>
+    <ul>
+        <li><strong>v1.0 (Junho/2026):</strong> Modelagem e definição inicial do escopo do domínio.</li>
+        <li><strong>v2.0 (Junho/2026):</strong> Atualização do documento refletindo a arquitetura final com segurança JWT/RBAC aplicada, testes automatizados e esteira de CI/CD integrada.</li>
+    </ul>
+
+</body>
+</html>
