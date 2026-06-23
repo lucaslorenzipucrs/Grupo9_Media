@@ -41,7 +41,10 @@ def create_access_token(data: dict):
         + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    to_encode.update({"exp": expire})
+    to_encode.update({
+        "exp": expire,
+        "token_type": "access"
+    })
 
     return jwt.encode(
         to_encode,
@@ -58,7 +61,10 @@ def create_refresh_token(data: dict):
         + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
-    to_encode.update({"exp": expire})
+    to_encode.update({
+        "exp": expire,
+        "token_type": "refresh"
+    })
 
     return jwt.encode(
         to_encode,
@@ -89,13 +95,28 @@ async def get_current_user(
 
     payload = verify_token(token)
 
-    print("PAYLOAD:", payload)
-
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido ou expirado."
         )
 
+    if payload.get("token_type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de acesso inválido."
+        )
+
     return payload
 
+
+async def get_current_admin_user(
+    payload: dict = Depends(get_current_user)
+):
+    if payload.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso permitido apenas para administradores."
+        )
+
+    return payload

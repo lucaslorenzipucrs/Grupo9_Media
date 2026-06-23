@@ -1,0 +1,55 @@
+
+Entregáveis
+
+Visão Geral
+Na segunda entrega (T2), cada grupo deverá desenvolver um microsserviço de domínio e seu respectivo microfrontend, integrados ao MS Auth eleito pela turma na T1. A entrega contempla o desenvolvimento ponta a ponta do domínio atribuído ao grupo, com a aplicação rodando em Ministack.
+
+O domínio do nosso grupo é este(Os serviços se comunicam entre si e com o MS Auth):
+Grupo 9 — Media Service
+Domínio: Imagens e variações visuais
+Responsável pelo armazenamento e gerenciamento das imagens e variações visuais dos produtos, incluindo fotos por variação de cor e grade.
+Funcionalidades esperadas:
+Upload e armazenamento de imagens de produtos
+Galeria de fotos por variação de cor e grade
+Definição de ordem de exibição das imagens
+Consulta de mídias pelos demais serviços dependentes
+
+
+Entregáveis Obrigatórios
+
+Documento de Arquitetura (ADR)
+Registro das decisões arquiteturais do domínio desenvolvido
+Justificativa das tecnologias e padrões escolhidos
+Análise de trade-offs considerando a integração com os demais serviços
+
+Microsserviço de Domínio
+Implementação do microsserviço correspondente ao domínio do grupo
+Integração com o MS Auth via JWT para autenticação e autorização
+Executável em ambiente local com Docker + Ministack
+
+Microfrontend (MFE)
+Interface desenvolvida com:
+React + TypeScript (obrigatório)
+MUI como design system (obrigatório)
+Integração com o microsserviço de domínio
+Integração com o Shell App via Module Federation
+
+CI/CD (Integração e Entrega Contínua)
+Pipeline configurado (GitHub Actions)
+Execução automática de:
+Testes unitários
+Build da aplicação
+Geração de releases:
+Imagem Docker publicada no Docker Hub (microsserviço)
+Pacote publicado no NPM (microfrontend)
+
+Aplicação rodando em Ministack
+Todos os serviços AWS utilizados devem funcionar em Ministack
+Ambiente reproduzível via Docker Compose
+
+Documentação
+Swagger/OpenAPI para o microsserviço
+Manual de UI para o microfrontend
+
+IA
+Logs de uso da IA com a extensão Congnitrace do VSCode, ou os hooks disponíveis neste repositório

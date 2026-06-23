@@ -120,6 +120,7 @@ services:
       - DB_USER=plus
       - DB_PASSWORD=plus_secret
       - DB_NAME=plus_media
+      - JWT_SECRET=${JWT_SECRET}
 
     depends_on:
       infra-provisioner:

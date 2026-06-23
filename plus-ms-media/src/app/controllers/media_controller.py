@@ -9,6 +9,8 @@ from app.database.connection import get_db
 from app.dtos.media_DTOs import CreateMediaDTO
 from app.dtos.media_DTOs import MediaResponseDTO
 from app.dtos.media_DTOs import ReorderMediaDTO
+from app.config.security import get_current_admin_user
+from app.config.security import get_current_user
 from app.services.media_service import MediaService
 
 router = APIRouter(
@@ -19,6 +21,7 @@ router = APIRouter(
 @router.post("/media", response_model=MediaResponseDTO, status_code=status.HTTP_201_CREATED)
 def create_media(
     media: CreateMediaDTO,
+    current_user: dict = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     return MediaService.create_media(media, db)
@@ -27,6 +30,7 @@ def create_media(
 @router.get("/products/{product_id}/media", response_model=list[MediaResponseDTO])
 def get_media_by_product(
     product_id: str,
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return MediaService.get_media_by_product(product_id, db)
@@ -35,6 +39,7 @@ def get_media_by_product(
 @router.get("/media/{media_id}", response_model=MediaResponseDTO)
 def get_media(
     media_id: str,
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     media = MediaService.get_media_by_id(media_id, db)
@@ -46,6 +51,7 @@ def get_media(
 @router.delete("/media/{media_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_media(
     media_id: str,
+    current_user: dict = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     deleted = MediaService.delete_media(media_id, db)
@@ -58,6 +64,7 @@ def delete_media(
 def reorder_media(
     product_id: str,
     reorder_payload: ReorderMediaDTO,
+    current_user: dict = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     try:
