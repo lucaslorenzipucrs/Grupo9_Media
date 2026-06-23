@@ -104,7 +104,13 @@ class MediaService:
             raise ValueError("Duplicate media IDs are not allowed in reorder payload.")
         if len(payload_orders) != len(set(payload_orders)):
             raise ValueError("Duplicate order values are not allowed in reorder payload.")
-
+        
+        expected_orders = set(range(len(payload_orders)))
+        if set(payload_orders) != expected_orders:
+            raise ValueError(
+                "Order values must be sequential starting from 0."
+            )
+        
         existing_medias = db.query(MediaModel)\
             .filter(MediaModel.id.in_(payload_ids))\
             .all()
@@ -121,6 +127,10 @@ class MediaService:
             raise ValueError("Reorder payload must include all media items for the product.")
 
         order_map = {item.id: item.ordem for item in reorder_data.medias}
+
+        for media in existing_medias:
+            media.ordem = order_map[media.id]
+            media.data_atualizacao = datetime.utcnow()
 
         db.commit()
 
