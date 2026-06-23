@@ -1,12 +1,15 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Response
+from fastapi import UploadFile
 from fastapi import status
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database.connection import get_db
-from app.dtos.media_DTOs import CreateMediaDTO
 from app.dtos.media_DTOs import MediaResponseDTO
 from app.dtos.media_DTOs import ReorderMediaDTO
 from app.config.security import get_current_admin_user
@@ -20,11 +23,18 @@ router = APIRouter(
 
 @router.post("/media", response_model=MediaResponseDTO, status_code=status.HTTP_201_CREATED)
 def create_media(
-    media: CreateMediaDTO,
+    arquivo: UploadFile = File(...),
+    id_produto: str = Form(...),
+    id_variacao: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
-    return MediaService.create_media(media, db)
+    return MediaService.create_media(
+        arquivo,
+        id_produto,
+        id_variacao,
+        db
+    )
 
 
 @router.get("/products/{product_id}/media", response_model=list[MediaResponseDTO])

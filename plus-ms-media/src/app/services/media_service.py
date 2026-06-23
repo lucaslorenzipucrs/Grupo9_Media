@@ -1,38 +1,83 @@
+from os.path import splitext
+from typing import Optional
 from uuid import uuid4
 from datetime import datetime
+from datetime import timezone
 
+from fastapi import UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.media_model import MediaModel
-from app.dtos.media_DTOs import CreateMediaDTO
 from app.dtos.media_DTOs import ReorderMediaDTO
+from app.services.storage_service import StorageService
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class MediaService:
 
     @staticmethod
+    def _build_object_key(
+        media_id: str,
+        id_produto: str,
+        id_variacao: Optional[str],
+        filename: Optional[str]
+    ) -> str:
+        extension = splitext(filename or "")[1].lower()
+
+        if id_variacao:
+            return f"products/{id_produto}/variations/{id_variacao}/{media_id}{extension}"
+
+        return f"products/{id_produto}/media/{media_id}{extension}"
+
+    @staticmethod
     def create_media(
-        media_data: CreateMediaDTO,
+        arquivo: UploadFile,
+        id_produto: str,
+        id_variacao: Optional[str],
         db: Session
     ):
         max_order = db.query(func.max(MediaModel.ordem))\
-            .filter(MediaModel.id_produto == media_data.id_produto)\
+            .filter(MediaModel.id_produto == id_produto)\
             .scalar()
 
-        media = MediaModel(
-            id=str(uuid4()),
-            id_produto=media_data.id_produto,
-            id_variacao=media_data.id_variacao,
-            caminho_arquivo=media_data.caminho_arquivo,
-            ordem=0 if max_order is None else max_order + 1,
-            data_criacao=datetime.utcnow(),
-            data_atualizacao=datetime.utcnow()
+        media_id = str(uuid4())
+        object_key = MediaService._build_object_key(
+            media_id,
+            id_produto,
+            id_variacao,
+            arquivo.filename
+        )
+        content_type = arquivo.content_type or "application/octet-stream"
+
+        StorageService.upload_file(
+            arquivo.file,
+            object_key,
+            content_type
         )
 
-        db.add(media)
-        db.commit()
-        db.refresh(media)
+        now = utc_now()
+        media = MediaModel(
+            id=media_id,
+            id_produto=id_produto,
+            id_variacao=id_variacao,
+            caminho_arquivo=object_key,
+            ordem=0 if max_order is None else max_order + 1,
+            data_criacao=now,
+            data_atualizacao=now
+        )
+
+        try:
+            db.add(media)
+            db.commit()
+            db.refresh(media)
+        except Exception:
+            db.rollback()
+            StorageService.delete_file(object_key)
+            raise
 
         return media
 
@@ -69,22 +114,29 @@ class MediaService:
 
         product_id = media.id_produto
         deleted_order = media.ordem
+        object_key = media.caminho_arquivo
+        
+        try:
+            StorageService.delete_file(object_key)
 
-        db.delete(media)
+            db.delete(media)
 
-        remaining_medias = db.query(MediaModel)\
-            .filter(
-                MediaModel.id_produto == product_id,
-                MediaModel.ordem > deleted_order
-            )\
-            .order_by(MediaModel.ordem)\
-            .all()
+            remaining_medias = db.query(MediaModel)\
+                .filter(
+                    MediaModel.id_produto == product_id,
+                    MediaModel.ordem > deleted_order
+                )\
+                .order_by(MediaModel.ordem)\
+                .all()
 
-        for remaining in remaining_medias:
-            remaining.ordem -= 1 # type: ignore
-            remaining.data_atualizacao = datetime.now() # type: ignore
+            for remaining in remaining_medias:
+                remaining.ordem -= 1 # type: ignore
+                remaining.data_atualizacao = utc_now() # type: ignore
 
-        db.commit()
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
         return True
 
@@ -130,7 +182,7 @@ class MediaService:
 
         for media in existing_medias:
             media.ordem = order_map[media.id]
-            media.data_atualizacao = datetime.utcnow()
+            media.data_atualizacao = utc_now()
 
         db.commit()
 
