@@ -40,10 +40,11 @@ def create_media(
 @router.get("/products/{product_id}/media", response_model=list[MediaResponseDTO])
 def get_media_by_product(
     product_id: str,
+    id_variacao: Optional[str] = None,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return MediaService.get_media_by_product(product_id, db)
+    return MediaService.get_media_by_product(product_id, db, id_variacao)
 
 
 @router.get("/media/{media_id}", response_model=MediaResponseDTO)

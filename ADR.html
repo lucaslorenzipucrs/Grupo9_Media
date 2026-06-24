@@ -206,7 +206,26 @@
         <li><strong>CI/CD:</strong> Pipeline automatizado executando a cada push no GitHub Actions.</li>
     </ul>
 
-    <h2>16. Integração com o Microfrontend e Shell App</h2>
+    <h2>16. Funcionalidade de Filtro por Variação</h2>
+    <p>O Media Service suporta filtragem de mídias por variação de produto em todas as camadas da arquitetura.</p>
+    <h3>Decisão:</h3>
+    <p>O filtro foi implementado como <strong>query parameter opcional</strong> (<code>id_variacao</code>) no endpoint de consulta, preservando compatibilidade retroativa com clientes que não enviam o parâmetro.</p>
+    <h3>Fluxo completo:</h3>
+    <ol>
+        <li>O usuário informa o <code>id_produto</code> e opcionalmente uma <code>id_variacao</code> (ex.: <code>cor-preta</code>) no MFE.</li>
+        <li>O cliente HTTP constrói a URL: <code>GET /products/{id_produto}/media?id_variacao=cor-preta</code>.</li>
+        <li>O controller FastAPI repassa o parâmetro ao <code>MediaService.get_media_by_product</code>.</li>
+        <li>O service adiciona o filtro na query SQLAlchemy apenas quando o parâmetro está presente, retornando somente as mídias da variação solicitada, ordenadas por <code>ordem</code>.</li>
+        <li>Quando nenhuma variação é informada, o comportamento é idêntico ao original (retorna todas as mídias do produto).</li>
+    </ol>
+    <h3>Justificativa:</h3>
+    <ul>
+        <li>Filtro no banco evita tráfego desnecessário de dados para o cliente.</li>
+        <li>Query param é preferível a path param pois o filtro é opcional.</li>
+        <li>Não requer migração de schema — o campo <code>id_variacao</code> já existia no modelo.</li>
+    </ul>
+
+    <h2>17. Integração com o Microfrontend e Shell App</h2>
     <p>O domínio de Mídia é exposto ao usuário por meio do <strong>MFE plus-mfe-media</strong>, construído com React + TypeScript + MUI, integrado ao <strong>Shell App</strong> via <strong>Module Federation</strong> (Vite Plugin Federation).</p>
     <h3>Decisões de integração cross-origin:</h3>
     <ul>

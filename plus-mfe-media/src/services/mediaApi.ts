@@ -86,8 +86,11 @@ async function request<T>(url: string, options: RequestInit = {}, retry = true):
   return response.json() as Promise<T>;
 }
 
-export function getMediaByProduct(productId: string) {
-  return request<MediaItem[]>(`/products/${encodeURIComponent(productId)}/media`);
+export function getMediaByProduct(productId: string, variationId?: string) {
+  const params = new URLSearchParams();
+  if (variationId?.trim()) params.set("id_variacao", variationId.trim());
+  const qs = params.toString() ? `?${params.toString()}` : "";
+  return request<MediaItem[]>(`/products/${encodeURIComponent(productId)}/media${qs}`);
 }
 
 export function uploadMedia(input: UploadMediaInput) {

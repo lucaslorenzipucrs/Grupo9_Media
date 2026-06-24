@@ -93,12 +93,16 @@ class MediaService:
     @staticmethod
     def get_media_by_product(
         product_id: str,
-        db: Session
+        db: Session,
+        id_variacao: Optional[str] = None
     ):
-        return db.query(MediaModel)\
-            .filter(MediaModel.id_produto == product_id)\
-            .order_by(MediaModel.ordem)\
-            .all()
+        query = db.query(MediaModel)\
+            .filter(MediaModel.id_produto == product_id)
+
+        if id_variacao:
+            query = query.filter(MediaModel.id_variacao == id_variacao)
+
+        return query.order_by(MediaModel.ordem).all()
 
     @staticmethod
     def delete_media(
@@ -117,7 +121,7 @@ class MediaService:
         object_key = media.caminho_arquivo
         
         try:
-            StorageService.delete_file(object_key)
+            StorageService.delete_file(object_key) # type: ignore
 
             db.delete(media)
 

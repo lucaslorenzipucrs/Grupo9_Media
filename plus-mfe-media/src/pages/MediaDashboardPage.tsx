@@ -88,14 +88,15 @@ function MediaPreview({ media }: { media: MediaItem }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function MediaDashboardPage() {
-  const [productId, setProductId]       = useState("Produto1");
-  const [variationId, setVariationId]   = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [medias, setMedias]             = useState<MediaItem[]>([]);
-  const [loading, setLoading]           = useState(false);
-  const [uploading, setUploading]       = useState(false);
-  const [savingOrder, setSavingOrder]   = useState(false);
-  const [dirtyOrder, setDirtyOrder]     = useState(false);
+  const [productId, setProductId]             = useState("Produto1");
+  const [variationId, setVariationId]         = useState("");
+  const [filterVariationId, setFilterVariationId] = useState("");
+  const [selectedFile, setSelectedFile]       = useState<File | null>(null);
+  const [medias, setMedias]                   = useState<MediaItem[]>([]);
+  const [loading, setLoading]                 = useState(false);
+  const [uploading, setUploading]             = useState(false);
+  const [savingOrder, setSavingOrder]         = useState(false);
+  const [dirtyOrder, setDirtyOrder]           = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
   const orderedMedias = useMemo(
@@ -110,16 +111,16 @@ export default function MediaDashboardPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const data = await getMediaByProduct(trimmed);
+      const data = await getMediaByProduct(trimmed, filterVariationId || undefined);
       setMedias(data);
       setDirtyOrder(false);
-      if (data.length === 0) setMessage({ type: "info", text: "Nenhuma midia cadastrada para este produto." });
+      if (data.length === 0) setMessage({ type: "info", text: "Nenhuma midia cadastrada para este produto" + (filterVariationId.trim() ? " com essa variacao" : "") + "." });
     } catch (err) {
       setMessage({ type: "error", text: getErrorMessage(err) });
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, filterVariationId]);
 
   const handleUpload = async () => {
     const trimmed = productId.trim();
@@ -230,6 +231,26 @@ export default function MediaDashboardPage() {
                           <SearchIcon fontSize="small" />
                         </InputAdornment>
                       ),
+                    },
+                  }}
+                />
+                <TextField
+                  label="Filtrar por variação (opcional)"
+                  placeholder="Ex.: cor-preta"
+                  value={filterVariationId}
+                  onChange={(e) => setFilterVariationId(e.target.value)}
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      endAdornment: filterVariationId ? (
+                        <InputAdornment position="end">
+                          <Tooltip title="Limpar filtro">
+                            <IconButton size="small" onClick={() => setFilterVariationId("")}>
+                              <span style={{ fontSize: 16, lineHeight: 1 }}>✕</span>
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ) : null,
                     },
                   }}
                 />
