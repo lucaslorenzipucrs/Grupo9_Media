@@ -185,8 +185,8 @@ class MediaService:
         order_map = {item.id: item.ordem for item in reorder_data.medias}
 
         for media in existing_medias:
-            media.ordem = order_map[media.id]
-            media.data_atualizacao = utc_now()
+            media.ordem = order_map[media.id] # type: ignore
+            media.data_atualizacao = utc_now() # type: ignore 
 
         db.commit()
 
