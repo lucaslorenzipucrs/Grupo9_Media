@@ -206,7 +206,19 @@
         <li><strong>CI/CD:</strong> Pipeline automatizado executando a cada push no GitHub Actions.</li>
     </ul>
 
-    <h2>16. Histórico de Revisões</h2>
+    <h2>16. Integração com o Microfrontend e Shell App</h2>
+    <p>O domínio de Mídia é exposto ao usuário por meio do <strong>MFE plus-mfe-media</strong>, construído com React + TypeScript + MUI, integrado ao <strong>Shell App</strong> via <strong>Module Federation</strong> (Vite Plugin Federation).</p>
+    <h3>Decisões de integração cross-origin:</h3>
+    <ul>
+        <li>O Shell App (<code>localhost:3000</code>) carrega o MFE de mídia (<code>localhost:4002</code>) como remote entry via <code>mfe_media/MediaDashboardPage</code>.</li>
+        <li>Como <code>localStorage</code> não é compartilhado entre origens distintas, o token JWT é propagado via <strong>query parameter</strong> (<code>?token=...&amp;refresh=...</code>) na navegação entre MFEs.</li>
+        <li>O MFE de mídia executa um <em>bootstrap</em> ao inicializar: lê os parâmetros da URL, persiste em <code>localStorage</code> e <code>sessionStorage</code>, e limpa a URL via <code>history.replaceState</code>.</li>
+        <li>Quando o usuário acessa <code>localhost:4002</code> sem token, é redirecionado ao login em <code>localhost:4001</code> com o parâmetro <code>?redirect=</code>, permitindo retorno automático com token após autenticação.</li>
+    </ul>
+    <h3>Justificativa da abordagem:</h3>
+    <p>A passagem de token via URL foi adotada como alternativa a cookies (<code>SameSite</code> bloquearia cross-origin) e <code>postMessage</code> (exigiria acoplamento explícito entre MFEs). A URL é limpa imediatamente após o bootstrap, eliminando exposição prolongada do token.</p>
+
+    <h2>17. Histórico de Revisões</h2>
     <ul>
         <li><strong>v1.0 (Junho/2026):</strong> Modelagem e definição inicial do escopo do domínio.</li>
         <li><strong>v2.0 (Junho/2026):</strong> Atualização do documento refletindo a arquitetura final com segurança JWT/RBAC aplicada, testes automatizados e esteira de CI/CD integrada.</li>

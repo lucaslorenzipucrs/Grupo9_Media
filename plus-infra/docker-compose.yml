@@ -47,7 +47,7 @@ services:
       - "${MS_AUTH_PORT:-3001}:3001"
     environment:
       - NODE_ENV=development
-      - PORT=3005
+      - PORT=3001
       - JWT_SECRET=${JWT_SECRET}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -68,12 +68,12 @@ services:
       context: ../plus-mfe-auth
       dockerfile: Dockerfile
       args:
-        VITE_MS_AUTH_URL: http://localhost:3005
+        VITE_MS_AUTH_URL: http://localhost:3001
     container_name: plus-mfe-auth
     ports:
       - "${MFE_AUTH_PORT:-4001}:4001"
     environment:
-      - VITE_MS_AUTH_URL=http://localhost:3005
+      - VITE_MS_AUTH_URL=http://localhost:3001
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
@@ -83,12 +83,37 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  plus-mfe-media:
+    build:
+      context: ../plus-mfe-media
+      dockerfile: Dockerfile
+      args:
+        VITE_MS_MEDIA_URL: http://localhost:3003
+        VITE_MS_AUTH_URL: http://localhost:3001
+        VITE_MEDIA_PUBLIC_BASE_URL: http://localhost:4566/plus-media
+        VITE_MFE_AUTH_ORIGIN: http://localhost:4001
+    container_name: plus-mfe-media
+    ports:
+      - "${MFE_MEDIA_PORT:-4002}:4002"
+    environment:
+      - VITE_MS_MEDIA_URL=http://localhost:3003
+      - VITE_MS_AUTH_URL=http://localhost:3001
+      - VITE_MEDIA_PUBLIC_BASE_URL=http://localhost:4566/plus-media
+      - VITE_MFE_AUTH_ORIGIN=http://localhost:4001
+    depends_on:
+      infra-provisioner:
+        condition: service_completed_successfully
+      plus-ms-media:
+        condition: service_started
+    restart: unless-stopped
+
   plus-shell:
     build:
       context: ../plus-shell
       dockerfile: Dockerfile
       args:
         - MFE_AUTH_URL=http://localhost:4001/assets/remoteEntry.js
+        - MFE_MEDIA_URL=http://localhost:4002/assets/remoteEntry.js
     container_name: plus-shell
     ports:
       - "${SHELL_PORT:-3000}:3000"
@@ -101,6 +126,8 @@ services:
       infra-provisioner:
         condition: service_completed_successfully
       plus-mfe-auth:
+        condition: service_started
+      plus-mfe-media:
         condition: service_started
     restart: unless-stopped
 

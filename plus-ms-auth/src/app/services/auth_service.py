@@ -47,7 +47,7 @@ class AuthService:
 
         if not verify_password(
             password,
-            user.hashed_pass
+            user.hashed_pass # type: ignore
         ):
             return None
 

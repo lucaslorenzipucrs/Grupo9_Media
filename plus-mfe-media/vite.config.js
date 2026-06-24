@@ -6,14 +6,10 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: "mfe_auth",
+      name: "mfe_media",
       filename: "remoteEntry.js",
-      // Componentes expostos para o Shell consumir
       exposes: {
-        "./LoginPage": "./src/pages/LoginPage",
-        './RegisterPage': './src/pages/RegisterPage',
-        "./SuccessPage": "./src/pages/SuccessPage",
-        "./DashboardPage": "./src/pages/DashboardPage",
+        "./MediaDashboardPage": "./src/pages/MediaDashboardPage",
       },
       shared: ["react", "react-dom"],
     }),
@@ -23,11 +19,11 @@ export default defineConfig({
     minify: false,
   },
   server: {
-    port: 4001,
+    port: 4002,
     host: true,
   },
   preview: {
-    port: 4001,
+    port: 4002,
     host: true,
   },
 });

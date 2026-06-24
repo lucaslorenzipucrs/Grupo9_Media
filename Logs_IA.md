@@ -87,6 +87,32 @@ Essa abordagem proporcionou:
 
 ⸻
 
+Exemplo 5 – Diagnóstico do 401 no MFE de Mídia (cross-origin token)
+
+Durante a fase de integração do microfrontend de mídia com o microsserviço, todas as requisições protegidas retornavam HTTP 401 Unauthorized mesmo após login bem-sucedido.
+
+A IA identificou as hipóteses em ordem de probabilidade:
+
+* Divergência de JWT_SECRET entre os containers.
+* Token não sendo persistido no localStorage após login.
+* Header Authorization ausente nas requisições do cliente HTTP do MFE.
+* Problema de cross-origin: localStorage não é compartilhado entre localhost:4001 (auth) e localhost:4002 (media).
+
+Foram validadadas todas possibilidadades: 
+
+* Inspecionou o Network do DevTools e constatou que o header Authorization estava ausente nas requisições saindo de localhost:4002
+* Verificou os logs do Docker Compose e identificou o aviso JWT_SECRET variable is not set, que havia mascarado a verdadeira causa.
+
+A causa raiz confirmada foi o isolamento de localStorage entre origens distintas: o MFE de auth salvava o token em localhost:4001, mas o MFE de mídia em localhost:4002 não tinha acesso a esse storage.
+
+A equipe decidiu, após análise das alternativas apresentadas pela IA (cookies, postMessage, BroadcastChannel), adotar a passagem de token via query parameter na navegação, com limpeza imediata da URL via history.replaceState. Essa abordagem foi considerada a mais simples, sem introduzir acoplamento entre MFEs e sem dependência de cookies cross-origin.
+
+A solução foi implementada no LoginPage.tsx (geração do redirect com token), no authStorage.ts (persistência em localStorage e sessionStorage) e no main.tsx do media (bootstrap do token da URL).
+
+Esse episódio evidenciou o uso da IA como ferramenta de diagnóstico, com a equipe conduzindo a validação das hipóteses e tomando a decisão de implementação.
+
+⸻
+
 Conclusão
 
 A Inteligência Artificial foi utilizada como ferramenta de apoio à engenharia de software, contribuindo para análise arquitetural, revisão de código, identificação de problemas, geração de testes e apoio à documentação.

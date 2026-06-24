@@ -1,29 +1,35 @@
 import { createTheme } from "@mui/material/styles";
 
-const PURPLE      = "#6C63FF";
-const PURPLE_DARK = "#5A52E0";
-const PURPLE_LIGHT = "#EAE9FF";
+const PRIMARY = "#0F766E";
+const PRIMARY_DARK = "#115E59";
+const PRIMARY_LIGHT = "#CCFBF1";
 
 export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main:          PURPLE,
-      dark:          PURPLE_DARK,
-      light:         PURPLE_LIGHT,
+      main:          PRIMARY,
+      dark:          PRIMARY_DARK,
+      light:         PRIMARY_LIGHT,
       contrastText:  "#ffffff",
     },
+    secondary: {
+      main: "#475569",
+      dark: "#334155",
+      light: "#E2E8F0",
+    },
     background: {
-      default: PURPLE,      
+      default: "#F6F8FA",
       paper:   "#ffffff",
     },
     text: {
-      primary:   "#3d3d6b",
-      secondary: "#9898b3",
+      primary:   "#17212B",
+      secondary: "#64748B",
     },
-    divider: "#e8e8f0",
-    error:   { main: "#e05252" },
-    success: { main: PURPLE  },
+    divider: "#E2E8F0",
+    error:   { main: "#DC2626" },
+    success: { main: "#16A34A" },
+    warning: { main: "#D97706" },
   },
 
   typography: {
@@ -38,10 +44,10 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           fontSize: "0.9375rem",
-          color: "#3d3d6b",
-          "&::before":                          { borderBottomColor: "#d0d0e8" },
-          "&:hover:not(.Mui-disabled)::before": { borderBottomColor: PURPLE },
-          "&::after":                           { borderBottomColor: PURPLE },
+          color: "#17212B",
+          "&::before":                          { borderBottomColor: "#CBD5E1" },
+          "&:hover:not(.Mui-disabled)::before": { borderBottomColor: PRIMARY },
+          "&::after":                           { borderBottomColor: PRIMARY },
         },
       },
     },
@@ -51,8 +57,8 @@ export const theme = createTheme({
         root: {
           fontSize: "0.75rem",
           fontWeight: 600,
-          color: "#9898b3",
-          "&.Mui-focused": { color: PURPLE },
+          color: "#64748B",
+          "&.Mui-focused": { color: PRIMARY },
         },
       },
     },
@@ -63,23 +69,23 @@ export const theme = createTheme({
           textTransform: "none",
           fontWeight: 700,
           fontSize: "0.9375rem",
-          letterSpacing: "0.02em",
+          letterSpacing: 0,
           boxShadow: "none",
           "&:hover":  { boxShadow: "none" },
           "&:active": { boxShadow: "none" },
         },
         contained: {
-          borderRadius: 50,
+          borderRadius: 8,
           padding: "12px 24px",
         },
         outlined: {
-          borderRadius: 50,
+          borderRadius: 8,
           padding: "10px 24px",
-          borderColor: "#e0e0f0",
-          color: PURPLE,
+          borderColor: "#CBD5E1",
+          color: PRIMARY,
           fontWeight: 600,
           backgroundColor: "#ffffff",
-          "&:hover": { borderColor: PURPLE, backgroundColor: "#f5f5ff" },
+          "&:hover": { borderColor: PRIMARY, backgroundColor: "#F0FDFA" },
         },
       },
     },

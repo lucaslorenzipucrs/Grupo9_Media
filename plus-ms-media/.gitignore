@@ -9,7 +9,8 @@
 npm-debug.log*
 
 # Build
-venv/
+.venv/
 __pycache__/
 .pytest_cache/
 *.pyc
+

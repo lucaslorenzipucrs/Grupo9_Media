@@ -1,63 +1,46 @@
-Trabalho 1 de ES2, Grupo 7
+# plus-mfe-media
 
-Integrantes: Jasmine Vanzella, Julia Fernandes, Luiza Rosito, Murilo Souza e Rafael Madeira 
+Microfrontend do **Media Service** do Grupo 9. Expoe uma interface React + TypeScript + MUI para gerenciar imagens de produtos, variacoes visuais e ordem de exibicao.
 
-# plus-mfe-auth
+## Funcionalidades
 
-# README Microfrontend de autenticação - Projeto Plus Gestão
-
-Expõe as páginas de fluxo de autenticação e gerenciamento via **Module Federation** para serem consumidas pelo `plus-shell`. Construído com React, TypeScript, Material UI (MUI) e Vite.
-
-## Tecnologias
-
-- **React 18** + **TypeScript**
-- **Vite 5**
-- **Material UI (MUI)** — Design System e Componentização
-- `@originjs/vite-plugin-federation` — Module Federation
-- `@vitejs/plugin-react`
+- Busca da galeria por ID do produto.
+- Upload de imagem com `id_produto` e `id_variacao` opcional.
+- Listagem das midias retornadas pelo `plus-ms-media`.
+- Reordenacao por controles de subir/descer.
+- Persistencia da ordem via endpoint do microsservico.
+- Exclusao de midia.
+- Consumo de JWT salvo no `localStorage` pelo MFE de auth.
 
 ## Module Federation
 
-Este microfrontend atua como **remote** e expõe múltiplos módulos para o Host (Shell):
-
 | Propriedade | Valor |
 |---|---|
-| Nome | `mfe_auth` |
-| Entry point | `http://localhost:4001/assets/remoteEntry.js` |
-| Expõe (`./LoginPage`) | `src/pages/LoginPage.tsx` |
-| Expõe (`./RegisterPage`) | `src/pages/RegisterPage.tsx` |
-| Expõe (`./SuccessPage`) | `src/pages/SuccessPage.tsx` |
-| Expõe (`./DashboardPage`) | `src/pages/DashboardPage.tsx` |
-| Shared | `react`, `react-dom` |
+| Nome | `mfe_media` |
+| Entry point | `http://localhost:4002/assets/remoteEntry.js` |
+| Expoe | `./MediaDashboardPage` |
+| Arquivo | `src/pages/MediaDashboardPage.tsx` |
 
-## Variáveis de Ambiente
+## Variaveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto (ou utilize a injeção via Docker/Vite).
-
-| Variável | Descrição | Valor Padrão |
+| Variavel | Descricao | Padrao |
 |---|---|---|
-| `VITE_MS_AUTH_URL` | URL do microsserviço de autenticação (`plus-ms-auth`) | `http://localhost:3001` |
+| `VITE_MS_MEDIA_URL` | URL do microsservico `plus-ms-media` | `http://localhost:3003` |
+| `VITE_MEDIA_PUBLIC_BASE_URL` | Base publica para montar preview a partir de `caminho_arquivo` | vazio |
+
+Para Ministack/LocalStack, uma base comum para preview e:
+
+```bash
+VITE_MEDIA_PUBLIC_BASE_URL=http://localhost:4566/plus-media
+```
 
 ## Scripts
 
-Os comandos abaixo são gerenciados via NPM e executados utilizando o Vite:
-
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Inicia em modo desenvolvimento na porta 4001 |
-| `npm run build` | Gera o bundle de produção na pasta `dist/` |
-| `npm run preview` | Serve o build gerado simulando o ambiente de produção na porta 4001 |
-
-## Desenvolvimento Local (sem Docker)
-
-Como todas as dependências (incluindo o Material UI e o Vite Federation) já estão mapeadas no `package.json`, a instalação é simples:
-
 ```bash
-# Instala todas as dependências do projeto
 npm install
-
-# Inicia o servidor de desenvolvimento
 npm run dev
+npm run build
+npm run preview
 ```
 
-# LOGS DE IA LOCALIZADOS NA PASTA plus-ms-auth/ai_logs
+O servidor de desenvolvimento roda na porta `4002`.

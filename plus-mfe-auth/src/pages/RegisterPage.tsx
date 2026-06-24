@@ -12,7 +12,7 @@ import { UnderlineField } from "../components/underline-field/underline-field";
 import { AlertBanner } from "../components/alert-banner/alert-banner";
 import { useRegisterForm } from "../hooks/register/useRegisterForm";
 
-const API = import.meta.env.VITE_MS_AUTH_URL || "http://localhost:3001";
+const API = "http://localhost:3001";
 
 function BackgroundBlobs() {
   const blob = (sx: object) => (
@@ -39,42 +39,40 @@ export default function RegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const handleRegister = useCallback(async (formValues: any) => {
-    setServerError(null);
-    try {
-      const res = await fetch(`${API}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: formValues.email, 
-          password: formValues.password 
-        }),
-      });
+  setServerError(null);
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: formValues.email,
+        password: formValues.password,
+      }),
+    });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+    console.log("Status:", res.status);
+    const data = await res.json().catch(() => ({}));
         console.log("Erro do Servidor:", data);
 
-        let errorMessage = "Erro ao criar conta.";
-
-        if (data && data.detail) {
-          if (Array.isArray(data.detail) && data.detail[0]?.msg) {
-            errorMessage = String(data.detail[0].msg);
-          } else if (typeof data.detail === "string") {
-            errorMessage = data.detail;
-          } else {
-            errorMessage = JSON.stringify(data.detail); // Fallback se for um objeto estranho
-          }
-        }
-
-        setServerError(errorMessage);
-        return;
+    if (!res.ok) {
+      let errorMessage = "Erro ao criar conta.";
+      if (data?.detail) {
+        errorMessage = Array.isArray(data.detail)
+          ? String(data.detail[0]?.msg ?? "Erro desconhecido")
+          : typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail);
       }
-      
-      window.location.href = "/login?registered=true";
-    } catch {
-      setServerError("Erro de conexão. Verifique se o servidor está rodando.");
+      setServerError(errorMessage);
+      return;
     }
-  }, []);
+
+    window.location.href = "/login?registered=true";
+  } catch (err) {
+    console.error("Erro na requisição:", err);  // ← erro real aparece aqui
+    setServerError("Erro de conexão. Verifique se o servidor está rodando.");
+  }
+}, []);
 
   const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = 
     useRegisterForm({ onSubmit: handleRegister });

@@ -20,28 +20,36 @@ interface LoginPageProps {
   onLogin?: (data: LoginResponse) => void;
 }
 
+function getValidatedRedirectTarget(): string {
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get("redirect")?.trim();
+  if (!redirect) return "";
+
+  try {
+    const url = new URL(redirect, window.location.origin);
+
+    if (url.origin !== window.location.origin && url.hostname !== "localhost") {
+      return "";
+    }
+
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
 function BackgroundBlobs() {
   const blob = (sx: object) => (
-    <Box
-      aria-hidden
-      sx={{
-        position: "absolute",
-        borderRadius: "50%",
-        pointerEvents: "none",
-        ...sx,
-      }}
-    />
+    <Box aria-hidden sx={{ position: "absolute", borderRadius: "50%", pointerEvents: "none", ...sx }} />
   );
   return (
     <>
-      {blob({ top: -80, right: -80, width: 280, height: 280, background: "rgba(255,255,255,0.13)" })}
+      {blob({ top: -80,    right: -80,  width: 280, height: 280, background: "rgba(255,255,255,0.13)" })}
       {blob({ bottom: -100, left: -100, width: 340, height: 340, background: "rgba(255,255,255,0.10)" })}
-      {blob({ bottom: 30, left: 10, width: 170, height: 170, background: "rgba(255,255,255,0.09)" })}
+      {blob({ bottom: 30,   left: 10,   width: 170, height: 170, background: "rgba(255,255,255,0.09)" })}
     </>
   );
 }
-
-
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const [authError, setAuthError] = useState<string | null>(null);
@@ -64,25 +72,48 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
         const data: LoginResponse = await res.json();
 
-        const tokenParaSalvar = data.access_token || data.token;
-        const refreshParaSalvar = data.refresh_token || data.refresh;
+        // Salva com todas as chaves possíveis para garantir compatibilidade
+        // entre o mfe-auth e o mfe-media (ambos rodam no mesmo origin via shell)
+        const token   = data.access_token || data.token || "";
+        const refresh = data.refresh_token || data.refresh || "";
 
-        if (tokenParaSalvar) {
-          localStorage.setItem("token", tokenParaSalvar);
+        if (token) {
+          localStorage.setItem("token", token);
+          localStorage.setItem("access_token", token);
+          sessionStorage.setItem("token", token);
+          sessionStorage.setItem("access_token", token);
+        }
+        if (refresh) {
+          localStorage.setItem("refresh", refresh);
+          localStorage.setItem("refresh_token", refresh);
+          sessionStorage.setItem("refresh", refresh);
+          sessionStorage.setItem("refresh_token", refresh);
         }
 
-        if (refreshParaSalvar) {
-          localStorage.setItem("refresh", refreshParaSalvar);
+        const redirectTarget = getValidatedRedirectTarget();
+        if (redirectTarget && token) {
+          const url = new URL(redirectTarget);
+          url.searchParams.set("token", token);
+          if (refresh) {
+            url.searchParams.set("refresh", refresh);
+          }
+          window.location.href = url.toString();
+          return;
         }
 
-        // localStorage.setItem("token",   data.access_token);
-        // localStorage.setItem("refresh", data.refresh_token || "");
-        onLogin?.(data);
-      } catch {
+        // Notifica o shell para redirecionar
+        if (onLogin) {
+          onLogin(data);
+        } else {
+          // Fallback: redireciona direto se não há shell
+          window.location.href = "/dashboard";
+        }
+      } catch (err) {
+        console.error("Erro de login:", err);
         setAuthError("Erro de conexão. Verifique se o servidor está rodando.");
       }
     },
-    [onLogin]
+    [onLogin],
   );
 
   const {
@@ -132,25 +163,19 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
         <Typography
           variant="h4"
-          align="center"
-          fontWeight={700}
-          sx={{ color: "#4a42c8", mb: 0.75, fontSize: { xs: "1.6rem", sm: "1.9rem" } }}
+          sx={{ color: "#4a42c8", fontWeight: 700, mb: 0.75, textAlign: "center", fontSize: { xs: "1.6rem", sm: "1.9rem" } }}
         >
           Entrar
         </Typography>
-        <Typography align="center" sx={{ color: "#9898b3", fontSize: "0.875rem", mb: 3 }}>
+
+        <Typography sx={{ color: "#9898b3", fontSize: "0.875rem", mb: 3, textAlign: "center" }}>
           Bem-vindo de volta!
         </Typography>
 
-        <AlertBanner
-          message={authError}
-          severity="error"
-          onClose={() => setAuthError(null)}
-        />
+        <AlertBanner message={authError} severity="error" onClose={() => setAuthError(null)} />
 
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <Stack spacing={3.5}>
-
             <UnderlineField
               id="email"
               label="E-mail"
@@ -205,24 +230,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 "&.Mui-disabled": { opacity: 0.7, color: "#fff" },
               }}
             >
-              {isSubmitting && (
-                <CircularProgress size={16} color="inherit" sx={{ mr: 1.25 }} />
-              )}
+              {isSubmitting && <CircularProgress size={16} color="inherit" sx={{ mr: 1.25 }} />}
               {isSubmitting ? "Entrando..." : "Entrar"}
             </Button>
           </Stack>
         </Box>
 
-        <Typography align="center" sx={{ mt: 3.5, fontSize: "0.875rem", color: "#9898b3" }}>
+        <Typography sx={{ mt: 3.5, fontSize: "0.875rem", color: "#9898b3", textAlign: "center" }}>
           Não tem uma conta?{" "}
           <Link
-            href="/register"
-            sx={{
-              color: "#6C63FF",
-              fontWeight: 700,
-              textDecoration: "none",
-              "&:hover": { textDecoration: "underline" },
-            }}
+            component="button"
+            onClick={() => { window.location.href = "/register"; }}
+            sx={{ color: "#6C63FF", fontWeight: 700, textDecoration: "none", "&:hover": { textDecoration: "underline" }, background: "none", border: "none", cursor: "pointer", fontSize: "inherit" }}
           >
             Criar conta
           </Link>

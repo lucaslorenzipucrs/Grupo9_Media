@@ -3,8 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
-ARG VITE_MS_AUTH_URL=http://localhost:3005
-ENV VITE_MS_AUTH_URL=$VITE_MS_AUTH_URL
+ENV VITE_MS_AUTH_URL=http://localhost:3001
 RUN npm run build
 
 FROM node:20-alpine

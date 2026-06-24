@@ -3,9 +3,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
-# Injeta a URL do MFE de auth em tempo de build
 ARG MFE_AUTH_URL=http://localhost:4001/assets/remoteEntry.js
+ARG MFE_MEDIA_URL=http://localhost:4002/assets/remoteEntry.js
 ENV MFE_AUTH_URL=$MFE_AUTH_URL
+ENV MFE_MEDIA_URL=$MFE_MEDIA_URL
 RUN npm run build
 
 FROM node:20-alpine
